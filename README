@@ -1,4 +1,6 @@
-This module allows basic gnome configuration for user environments.
+This module installs Gnome Shell.
+
+It also allows basic gnome configuration for user environments.
 
 GConf is the older Gnome configuration system (shipped <= Ubuntu Lucid) and
 GSettings is the newer equivalent.

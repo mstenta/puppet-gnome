@@ -2,7 +2,7 @@
 
 == Definition: gnome::gsettings
 
-Sets a configuration key in Gnome's GSettings registry.
+Sets a configuration key in Gnome’s GSettings registry.
 
 Parameters:
 - *$user*: the name of the system user (see user param of 'exec')
@@ -27,24 +27,32 @@ If you want to add a String value to an array of strings, set $list_append to
 you want to append without quotes.
 
 */
-define gnome::gsettings($user, $schema, $key, $value_type="String", $value, $list_append=false) {
+define gnome::gsettings(
+  $user,
+  $schema,
+  $key,
+  $value,
+  $value_type='String',
+  $list_append=false,
+) {
 
   case $value_type {
     'String': { $prep_value = "'${value}'" }
-    /Integer|Boolean|Array/: { $prep_value = "${value}" }
+    /Integer|Boolean|Array/: { $prep_value = $value }
     default: { fail "Invalid type '${type}'" }
   }
 
   $command = $list_append ? {
     # I think this commands only work when there is and X session running
-    true  => "DISPLAY=:0 gsettings set ${schema} ${key} \"`gsettings get ${schema} ${key} | sed s/.$//`, ${prep_value}]\"",
-    false => "DISPLAY=:0 gsettings set ${schema} ${key} \"${prep_value}\"",
+    true  => "gsettings set ${schema} ${key} \"`gsettings get ${schema} ${key} | sed s/.$//`, ${prep_value}]\"",
+    false => "gsettings set ${schema} ${key} \"${prep_value}\"",
   }
 
   exec {"set ${key} on user ${user} to ${prep_value}":
-    command => "${command}",
-    unless  => "gsettings get ${schema} ${key} | grep -q \"${prep_value}\"",
-    user    => "$user",
+    command     => $command,
+    unless      => "gsettings get ${schema} ${key} | grep -q \"${prep_value}\"",
+    user        => $user,
+    environment => ['DISPLAY=:0'],
   }
 
 }
